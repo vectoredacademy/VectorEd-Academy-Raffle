@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VectorEd Academy - Exclusive Grand Raffle Wheel</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome 6.4.0 Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Canvas Confetti CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #0B192C;
+      color: #F8FAFC;
+      overflow-x: hidden;
+    }
+
+    @keyframes titleShimmer {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    @keyframes floatBounce {
+      0%, 100% { transform: translateY(0px) scale(1); }
+      50% { transform: translateY(-5px) scale(1.015); }
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 20px rgba(255, 178, 0, 0.35), inset 0 0 15px rgba(255, 178, 0, 0.2); }
+      50% { box-shadow: 0 0 40px rgba(255, 101, 0, 0.65), inset 0 0 25px rgba(255, 101, 0, 0.4); }
+    }
+
+    .animated-banner-title {
+      background: linear-gradient(90deg, #FFB200, #FFFFFF, #FF6500, #FFD700, #FFB200);
+      background-size: 300% 300%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: titleShimmer 3.5s ease infinite;
+    }
+
+    .lively-bounce {
+      animation: floatBounce 3s ease-in-out infinite;
+    }
+
+    .amber-gradient-btn {
+      background: linear-gradient(135deg, #FFB200 0%, #FF6500 100%);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .amber-gradient-btn:hover:not(:disabled) {
+      box-shadow: 0 0 25px rgba(255, 178, 0, 0.7);
+      transform: translateY(-2px);
+    }
+
+    .amber-gradient-btn:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+
+    .wheel-glow-box {
+      animation: pulseGlow 4s infinite ease-in-out;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+      border-radius: 8px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 8px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #FFB200;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-amber-500 selection:text-slate-950">
+
+  <!-- TOP NAVIGATION HEADER -->
+  <header class="w-full bg-slate-900/90 border-b border-slate-800/80 sticky top-0 z-40 backdrop-blur-md px-3 sm:px-4 lg:px-8 py-2.5 sm:py-3.5 shadow-xl">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-2 sm:gap-4">
+      
+      <div class="flex items-center gap-2 sm:gap-3">
+        <img src="https://iili.io/ndL8PQj.png" alt="VectorEd Academy Logo" class="h-8 sm:h-10 w-auto object-contain drop-shadow-md">
+        <div>
+          <h1 class="text-base sm:text-xl md:text-2xl font-extrabold tracking-wide text-white flex items-center gap-1 leading-tight">
+            Vector<span class="text-amber-500">Ed</span> <span class="text-slate-200">Academy</span>
+          </h1>
+          <p class="text-[10px] sm:text-[11px] font-semibold text-slate-400 uppercase tracking-widest hidden sm:block">Official Event Raffle Engine</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-1.5 sm:gap-3">
+        <button id="sound-toggle-btn" onclick="toggleSound()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 active:scale-95" title="Toggle Sound Effects">
+          <i class="fa-solid fa-volume-high text-amber-400" id="sound-icon"></i>
+          <span class="hidden sm:inline">Sound On</span>
+        </button>
+
+        <button onclick="fetchAllData()" id="sync-btn" class="bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/30 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-sm active:scale-95" title="Sync Leads & Prizes from Google Sheets">
+          <i class="fa-solid fa-arrows-rotate" id="sync-icon"></i>
+          <span class="hidden sm:inline">Sync Cloud</span>
+        </button>
+
+        <button onclick="openAdminModal()" class="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/40 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 active:scale-95">
+          <i class="fa-solid fa-user-shield"></i>
+          <span class="hidden xs:inline">Admin</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-7xl mx-auto w-full px-3 sm:px-4 py-4 sm:py-6 flex-1 flex flex-col items-center justify-start gap-4 sm:gap-6">
+
+    <section class="text-center w-full max-w-3xl mx-auto lively-bounce my-1 sm:my-2 px-2">
+      <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[11px] sm:text-xs font-bold uppercase tracking-wider mb-1.5 shadow-sm">
+        <i class="fa-solid fa-sparkles"></i> VectorEd Special Event <i class="fa-solid fa-sparkles"></i>
+      </div>
+      <h2 class="text-xl sm:text-3xl md:text-5xl font-black tracking-tight uppercase animated-banner-title drop-shadow-lg leading-tight">
+        Exclusive VectorEd Academy's Raffle
+      </h2>
+      <p class="text-xs sm:text-lg md:text-xl font-bold text-slate-200 mt-1 italic tracking-wide">
+        "Win Prizes, Customized For Success"
+      </p>
+    </section>
+
+    <!-- DASHBOARD CONTENT GRID -->
+    <div class="w-full grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start">
+      
+      <!-- CENTER PANEL: WHEEL -->
+      <section class="lg:col-span-6 bg-slate-900/80 border border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-2xl flex flex-col items-center justify-center relative wheel-glow-box order-1 lg:order-2">
+        
+        <div class="absolute -top-3.5 sm:-top-4 z-30 text-amber-400 text-4xl sm:text-5xl filter drop-shadow-[0_4px_12px_rgba(255,178,0,0.9)] animate-pulse">
+          <i class="fa-solid fa-location-pin fa-rotate-180"></i>
+        </div>
+
+        <div class="relative w-full max-w-[320px] xs:max-w-[360px] sm:max-w-[440px] aspect-square flex items-center justify-center my-2 sm:my-3">
+          <canvas id="wheelCanvas" width="500" height="500" class="w-full h-full drop-shadow-2xl rounded-full transition-transform duration-100"></canvas>
+          
+          <div class="absolute w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-tr from-slate-950 via-slate-900 to-slate-800 border-2 sm:border-4 border-amber-400 shadow-[0_0_20px_rgba(255,178,0,0.6)] flex items-center justify-center pointer-events-none z-10">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-500/20 border border-amber-400/50 flex items-center justify-center">
+              <i class="fa-solid fa-star text-amber-400 text-xl sm:text-2xl animate-spin" style="animation-duration: 8s;"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="w-full max-w-sm flex flex-col items-center gap-2.5 sm:gap-3 mt-1 sm:mt-2">
+          <button id="spin-btn" onclick="spinWheel()" disabled class="w-full py-3.5 sm:py-4 rounded-xl sm:rounded-2xl font-black text-slate-950 text-lg sm:text-xl tracking-wider uppercase amber-gradient-btn shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2.5 active:scale-98">
+            <i class="fa-solid fa-compact-disc fa-spin text-slate-950 text-xl sm:text-2xl hidden" id="spin-spinner"></i>
+            <i class="fa-solid fa-play text-slate-950 text-xl sm:text-2xl" id="spin-play-icon"></i>
+            <span id="spin-btn-text">SPIN ROULETTE</span>
+          </button>
+
+          <div id="empty-roster-notice" class="w-full bg-amber-500/10 border border-amber-500/30 p-3 rounded-xl text-center hidden">
+            <p class="text-xs text-amber-300 font-bold mb-2">
+              <i class="fa-solid fa-circle-info"></i> All candidates have been picked or roster is empty!
+            </p>
+            <div class="flex flex-col sm:flex-row gap-2">
+              <button onclick="restoreDefaultRoster()" class="flex-1 py-2.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-extrabold transition shadow active:scale-95">
+                <i class="fa-solid fa-rotate-left"></i> Reload Default
+              </button>
+              <button onclick="fetchAllData()" class="flex-1 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/40 text-xs font-bold transition active:scale-95">
+                <i class="fa-solid fa-cloud-arrow-down"></i> Re-Sync Cloud
+              </button>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between w-full text-[11px] sm:text-xs text-slate-400 px-1.5 font-medium">
+            <span id="participant-count-badge"><i class="fa-solid fa-users text-amber-400"></i> Participants: 0</span>
+            <span id="cloud-sync-status" class="text-emerald-400 font-semibold"><i class="fa-solid fa-cloud-check"></i> Cloud Synced</span>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- LEFT PANEL: PRIZES -->
+      <section class="lg:col-span-3 bg-slate-900/80 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-2xl flex flex-col gap-3.5 sm:gap-4 backdrop-blur-sm order-2 lg:order-1">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2.5 sm:pb-3">
+          <h3 class="font-extrabold text-white text-sm sm:text-base flex items-center gap-2">
+            <i class="fa-solid fa-trophy text-amber-400"></i> Raffle Prizes
+          </h3>
+          <span id="prize-count-badge" class="bg-amber-500/20 text-amber-400 text-xs font-bold px-2.5 py-0.5 rounded-full border border-amber-500/30">
+            0 Items
+          </span>
+        </div>
+
+        <div class="bg-slate-950/60 rounded-xl p-2.5 sm:p-3 border border-slate-800">
+          <label class="block text-[11px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
+            Target Prize for Next Spin:
+          </label>
+          <select id="active-prize-select" class="w-full bg-slate-900 border border-amber-500/40 text-amber-300 font-bold text-xs rounded-lg p-2 sm:p-2.5 outline-none focus:border-amber-400">
+          </select>
+        </div>
+
+        <div id="prize-list-container" class="space-y-2.5 sm:space-y-3 max-h-[280px] sm:max-h-[420px] overflow-y-auto pr-1">
+        </div>
+      </section>
+
+      <!-- RIGHT PANEL: WINNERS -->
+      <section class="lg:col-span-3 bg-slate-900/80 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-2xl flex flex-col gap-3.5 sm:gap-4 backdrop-blur-sm order-3">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2.5 sm:pb-3">
+          <h3 class="font-extrabold text-white text-sm sm:text-base flex items-center gap-2">
+            <i class="fa-solid fa-crown text-amber-400"></i> Official Winners
+          </h3>
+          <span id="winner-count-badge" class="bg-emerald-500/20 text-emerald-400 text-xs font-bold px-2.5 py-0.5 rounded-full border border-emerald-500/30">
+            0 Winners
+          </span>
+        </div>
+
+        <p class="text-xs text-slate-400">
+          Winners recorded live during session:
+        </p>
+
+        <div id="winners-log-container" class="space-y-2 sm:space-y-2.5 max-h-[280px] sm:max-h-[460px] overflow-y-auto pr-1">
+        </div>
+      </section>
+
+    </div>
+
+  </main>
+
+  <!-- WINNER MODAL -->
+  <div id="winner-modal" class="fixed inset-0 bg-slate-950/95 backdrop-blur-xl hidden items-center justify-center p-3 sm:p-4 z-50 transition-all duration-300 overflow-y-auto">
+    <div class="bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-amber-500/60 rounded-2xl sm:rounded-3xl p-5 sm:p-8 max-w-2xl w-full text-center shadow-[0_0_80px_rgba(255,178,0,0.4)] relative my-auto">
+      
+      <div class="w-14 h-14 sm:w-16 sm:h-16 bg-amber-500/20 text-amber-400 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3 border-2 border-amber-500/50 text-xl sm:text-2xl shadow-inner animate-pulse">
+        <i class="fa-solid fa-trophy"></i>
+      </div>
+
+      <div class="inline-block px-3 py-1 sm:px-4 sm:py-1 rounded-full bg-amber-500/20 text-amber-400 font-extrabold text-[10px] sm:text-xs uppercase tracking-widest border border-amber-500/40 mb-1.5">
+        🎉 WINNER ANNOUNCEMENT 🎉
+      </div>
+
+      <h2 id="winner-modal-name" class="text-2xl sm:text-4xl md:text-5xl font-black text-amber-400 my-1 sm:my-2 tracking-tight drop-shadow-md break-words">
+        Participant Name
+      </h2>
+
+      <div class="my-3 sm:my-4 p-3 sm:p-5 rounded-xl sm:rounded-2xl bg-slate-800/80 border border-amber-500/30 max-w-xl mx-auto flex flex-col items-center justify-center gap-2.5">
+        <p class="text-[10px] sm:text-xs text-slate-400 uppercase tracking-wider font-bold">HAS WON PRIZE RANKING:</p>
+        
+        <div id="winner-modal-image-container" class="hidden my-1 w-full flex justify-center">
+          <div class="relative w-full max-w-lg rounded-2xl overflow-hidden border-2 border-amber-400/60 shadow-2xl bg-slate-950 p-1.5 cursor-pointer group" title="Click to view full screen" onclick="openLightboxImage(document.getElementById('winner-modal-image').src)">
+            <img id="winner-modal-image" src="" alt="Prize Won" class="w-full h-auto max-h-[320px] sm:max-h-[420px] object-contain rounded-xl transition-transform duration-300 group-hover:scale-[1.01]">
+            <div class="absolute bottom-2.5 right-2.5 bg-slate-900/85 text-amber-400 border border-amber-500/50 px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-bold backdrop-blur-md opacity-90 group-hover:opacity-100 flex items-center gap-1.5 shadow-lg">
+              <i class="fa-solid fa-expand"></i> Tap for Full Screen
+            </div>
+          </div>
+        </div>
+
+        <h3 id="winner-modal-prize" class="text-base sm:text-xl md:text-2xl font-black text-slate-100 flex items-center justify-center gap-1.5 sm:gap-2">
+          <i class="fa-solid fa-gift text-amber-400"></i> <span id="winner-prize-text">#1 Grand Prize</span>
+        </h3>
+      </div>
+
+      <p class="text-xs sm:text-sm text-slate-200 mb-4 sm:mb-6 max-w-lg mx-auto leading-relaxed font-medium bg-amber-500/10 border border-amber-500/30 p-3 rounded-xl">
+        <i class="fa-solid fa-circle-info text-amber-400 mr-1"></i>
+        Please <span class="text-amber-400 font-extrabold underline decoration-amber-400 underline-offset-2">message VectorEd Academy Page with this screenshot</span> to claim your prize!
+      </p>
+
+      <button onclick="confirmAndStoreWinner()" class="w-full max-w-md mx-auto py-3.5 sm:py-4 rounded-xl sm:rounded-2xl font-black text-slate-950 text-base sm:text-lg uppercase tracking-wider amber-gradient-btn shadow-2xl flex items-center justify-center gap-2 active:scale-98">
+        <i class="fa-solid fa-check-circle text-slate-950 text-lg sm:text-xl"></i>
+        <span>Claim Prize & Continue</span>
+      </button>
+
+    </div>
+  </div>
+
+  <!-- LIGHTBOX MODAL -->
+  <div id="lightbox-modal" class="fixed inset-0 bg-slate-950/95 backdrop-blur-2xl hidden items-center justify-center p-3 sm:p-6 z-50 transition-all duration-300 cursor-pointer" onclick="closeLightboxImage()">
+    <div class="relative max-w-5xl max-h-[92vh] flex flex-col items-center justify-center">
+      <button onclick="closeLightboxImage()" class="absolute -top-10 right-0 sm:-top-12 text-slate-300 hover:text-white text-xl sm:text-2xl font-bold bg-slate-900/80 px-3 py-1 rounded-full border border-slate-700">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <img id="lightbox-image" src="" alt="Full View Prize" class="max-w-full max-h-[85vh] object-contain rounded-2xl border-2 border-amber-400/70 shadow-[0_0_60px_rgba(255,178,0,0.4)]">
+      <p class="text-xs text-slate-400 mt-2.5 font-semibold bg-slate-900/80 px-3 py-1 rounded-full border border-slate-800"><i class="fa-solid fa-xmark mr-1"></i> Click anywhere to close</p>
+    </div>
+  </div>
+
+  <!-- ADMIN MODAL -->
+  <div id="admin-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center p-3 sm:p-4 z-50">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl sm:rounded-3xl p-5 sm:p-8 max-w-2xl w-full max-h-[88vh] overflow-y-auto shadow-2xl relative my-auto">
+      
+      <div class="flex items-center justify-between border-b border-slate-800 pb-4 mb-6">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/30 font-bold">
+            <i class="fa-solid fa-sliders"></i>
+          </div>
+          <div>
+            <h3 class="text-lg font-extrabold text-white">VectorEd Admin Copilot</h3>
+            <p class="text-xs text-slate-400">Manage Prizes, Winners, Roster & System Settings</p>
+          </div>
+        </div>
+        <button onclick="closeAdminModal()" class="text-slate-400 hover:text-white text-xl p-2">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- LOGIN -->
+      <div id="admin-login-section" class="space-y-4">
+        <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 text-center">
+          <i class="fa-solid fa-lock text-amber-400 text-3xl mb-2"></i>
+          <p class="text-sm text-slate-300 font-semibold">Administrator Authentication Required</p>
+          <p class="text-xs text-slate-500 mt-0.5">Enter password to unlock administrative features.</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Admin Password</label>
+          <input type="password" id="admin-password-input" placeholder="Enter password..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-white focus:border-amber-500 outline-none">
+        </div>
+
+        <button onclick="authenticateAdmin()" class="w-full py-3 rounded-xl font-bold text-slate-950 amber-gradient-btn text-sm uppercase tracking-wide">
+          Unlock Admin Portal
+        </button>
+      </div>
+
+      <!-- DASHBOARD -->
+      <div id="admin-panel-section" class="hidden space-y-6">
+        
+        <div class="flex border-b border-slate-800 gap-2 overflow-x-auto">
+          <button onclick="switchAdminTab('prizes')" id="tab-btn-prizes" class="px-4 py-2 text-xs font-bold border-b-2 border-amber-500 text-amber-400 whitespace-nowrap">
+            <i class="fa-solid fa-gifts"></i> Manage Prizes
+          </button>
+          <button onclick="switchAdminTab('winners')" id="tab-btn-winners" class="px-4 py-2 text-xs font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap">
+            <i class="fa-solid fa-trophy"></i> Manage Winners
+          </button>
+          <button onclick="switchAdminTab('roster')" id="tab-btn-roster" class="px-4 py-2 text-xs font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap">
+            <i class="fa-solid fa-users"></i> Roster & Options
+          </button>
+          <button onclick="switchAdminTab('security')" id="tab-btn-security" class="px-4 py-2 text-xs font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap">
+            <i class="fa-solid fa-key"></i> Security
+          </button>
+        </div>
+
+        <!-- PRIZES TAB -->
+        <div id="admin-tab-prizes" class="space-y-4">
+          <div class="flex items-center justify-between">
+            <h4 class="text-sm font-bold text-slate-200">Raffle Prize Inventory (Max 5)</h4>
+            <button onclick="openPrizeFormModal()" class="bg-amber-500/20 text-amber-400 border border-amber-500/40 text-xs px-3 py-1.5 rounded-lg font-bold hover:bg-amber-500/30">
+              <i class="fa-solid fa-plus"></i> Add New Prize
+            </button>
+          </div>
+
+          <div id="admin-prizes-list" class="space-y-3 max-h-72 overflow-y-auto pr-1">
+          </div>
+        </div>
+
+        <!-- WINNERS TAB -->
+        <div id="admin-tab-winners" class="hidden space-y-4">
+          <div class="flex items-center justify-between">
+            <h4 class="text-sm font-bold text-slate-200">Recorded Raffle Winners</h4>
+            <button onclick="clearAllWinners()" class="bg-rose-500/20 text-rose-400 border border-rose-500/30 text-xs px-3 py-1.5 rounded-lg font-bold hover:bg-rose-500/30">
+              <i class="fa-solid fa-trash"></i> Clear Winners Log
+            </button>
+          </div>
+          <div id="admin-winners-list" class="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+          </div>
+        </div>
+
+        <!-- ROSTER TAB -->
+        <div id="admin-tab-roster" class="hidden space-y-4">
+          <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-3">
+            <div class="flex items-center justify-between">
+              <label class="text-xs font-bold text-slate-300">Auto-remove winner from wheel after spin</label>
+              <input type="checkbox" id="auto-remove-checkbox" checked onchange="toggleAutoRemoveWinner(this.checked)" class="w-4 h-4 accent-amber-500 rounded">
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between pt-2">
+            <h4 class="text-sm font-bold text-slate-200">Active Wheel Participants</h4>
+            <button onclick="addManualParticipantPrompt()" class="bg-amber-500/20 text-amber-400 border border-amber-500/40 text-xs px-3 py-1.5 rounded-lg font-bold hover:bg-amber-500/30">
+              <i class="fa-solid fa-plus"></i> Add Candidate
+            </button>
+          </div>
+
+          <div id="admin-roster-list" class="space-y-2 max-h-60 overflow-y-auto pr-1">
+          </div>
+        </div>
+
+        <!-- SECURITY TAB -->
+        <div id="admin-tab-security" class="hidden space-y-4">
+          <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
+            <h4 class="text-xs font-bold text-amber-400 uppercase tracking-wider">Security Question Verification</h4>
+            <p class="text-xs text-slate-300 font-semibold">When was VectorEd Academy Founded?</p>
+            
+            <div class="flex gap-2">
+              <input type="text" id="sec-question-answer" placeholder="Enter answer..." class="flex-1 bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-xs text-white outline-none focus:border-amber-500">
+              <button onclick="verifySecurityAnswer()" class="bg-amber-500 text-slate-950 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wide hover:bg-amber-400 transition">
+                Verify
+              </button>
+            </div>
+          </div>
+
+          <div id="password-change-box" class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3 opacity-50 pointer-events-none transition-all">
+            <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Update Admin Password</h4>
+            <input type="password" id="new-password-input" placeholder="Enter new password..." class="w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-xs text-white outline-none focus:border-amber-500">
+            <button onclick="saveNewAdminPassword()" class="w-full py-2.5 rounded-xl font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs uppercase tracking-wide transition">
+              Save New Password
+            </button>
+          </div>
+
+          <div class="pt-2">
+            <button onclick="logoutAdmin()" class="w-full py-2.5 rounded-xl font-bold bg-slate-800 hover:bg-slate-700 text-rose-400 text-xs transition flex items-center justify-center gap-2">
+              <i class="fa-solid fa-right-from-bracket"></i> Lock & Log Out Admin
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PRIZE FORM MODAL -->
+  <div id="prize-form-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-3 sm:p-4 z-50">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl sm:rounded-3xl p-5 sm:p-6 max-w-md w-full shadow-2xl space-y-4 relative my-auto">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 id="prize-modal-title" class="text-sm sm:text-base font-extrabold text-white flex items-center gap-2">
+          <i class="fa-solid fa-gift text-amber-400"></i> Add New Prize
+        </h3>
+        <button onclick="closePrizeFormModal()" class="text-slate-400 hover:text-white text-lg p-1">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <input type="hidden" id="editing-prize-id" value="">
+
+      <div>
+        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
+          Name of the Prize <span class="text-rose-400">*</span>
+        </label>
+        <input type="text" id="prize-name-input" placeholder="e.g. #1 Grand Prize: iPad Air + Stylus" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white focus:border-amber-500 outline-none">
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">
+          Image of the Prize (Hosted Link / URL)
+        </label>
+        <input type="url" id="prize-image-input" placeholder="https://images.unsplash.com/photo-..." oninput="previewPrizeImage(this.value)" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white focus:border-amber-500 outline-none">
+        <p class="text-[10px] text-slate-500 mt-1">Paste direct hosted image link (Unsplash, Imgur, Iili)</p>
+      </div>
+
+      <div id="prize-image-preview-container" class="hidden bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-center">
+        <p class="text-[10px] text-slate-400 uppercase font-bold mb-1.5">Image Preview:</p>
+        <img id="prize-image-preview" src="" alt="Prize Preview" class="h-24 mx-auto object-contain rounded-lg border border-slate-800" onerror="window.handlePreviewError && window.handlePreviewError()">
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <button onclick="closePrizeFormModal()" class="flex-1 py-2.5 rounded-xl font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs transition">
+          Cancel
+        </button>
+        <button onclick="savePrizeFromModal()" class="flex-1 py-2.5 rounded-xl font-bold amber-gradient-btn text-slate-950 text-xs uppercase tracking-wide">
+          Save Prize
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="w-full border-t border-slate-800/80 bg-slate-900/60 py-4 px-4 text-center text-xs text-slate-500">
+    © 2026 VectorEd Academy. All rights reserved. Interactive Real-Time Event Raffle Platform.
+  </footer>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzXXvuP_Pc7-UDzEvCGZGjjbW33fl6L3q1Unbzxhb2GRlLQZmnP2c3tQf0EI-MRno0w/exec";
+
+    const defaultSampleRoster = [
+      "Engr. Johnres Hipe", "Teacher Zyrille Pagulong", "Teacher Kate Veronica", 
+      "Maria Santos", "Juan Dela Cruz", "Alex Gonzaga", "Patricia Reyes", 
+      "Gabriel Mendoza", "Sophia Loren", "Christian Bale"
+    ];
+
+    let participants = [...defaultSampleRoster];
+
+    const defaultPrizes = [
+      { id: 1, rank: 1, title: "#1 Grand Prize: iPad Air + Stylus", icon: "fa-tablet-screen-button", image: "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=300&auto=format&fit=crop&q=80", desc: "Top Academic Performance Pack" },
+      { id: 2, rank: 2, title: "#2 2nd Prize: Wireless Headset", icon: "fa-headphones", image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&auto=format&fit=crop&q=80", desc: "Focus Study Audio Gear" },
+      { id: 3, rank: 3, title: "#3 3rd Prize: Scientific Calculator", icon: "fa-calculator", image: "https://images.unsplash.com/photo-1594980596870-8aa52a78d8cd?w=300&auto=format&fit=crop&q=80", desc: "Board Exam Approved Casio FX" },
+      { id: 4, rank: 4, title: "#4 Consolation: VectorEd Hoodie", icon: "fa-shirt", image: "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=300&auto=format&fit=crop&q=80", desc: "Official VectorEd Apparel" }
+    ];
+
+    let prizes = [...defaultPrizes];
+    let winners = [];
+    let isSpinning = false;
+    let currentAngle = 0;
+    let soundEnabled = true;
+    let currentPendingWinner = null;
+    let autoRemoveWinner = true;
+
+    let adminPassword = localStorage.getItem('ve_admin_password') || '123456';
+    let isAdminAuthenticated = false;
+    let isSecurityQuestionPassed = false;
+
+    const vibrantColors = [
+      '#FFB200', '#2563EB', '#FF6500', '#10B981', '#8B5CF6', 
+      '#F43F5E', '#06B6D4', '#D97706', '#3B82F6', '#EC4899'
+    ];
+
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playTickSound() {
+      if (!soundEnabled) return;
+      try {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.035);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.035);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.035);
+      } catch (e) {}
+    }
+
+    function playVictoryFanfare() {
+      if (!soundEnabled) return;
+      try {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const notes = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99];
+        notes.forEach((freq, idx) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, audioCtx.currentTime + idx * 0.08);
+          gain.gain.setValueAtTime(0, audioCtx.currentTime + idx * 0.08);
+          gain.gain.linearRampToValueAtTime(0.25, audioCtx.currentTime + idx * 0.08 + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + idx * 0.08 + 0.4);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(audioCtx.currentTime + idx * 0.08);
+          osc.stop(audioCtx.currentTime + idx * 0.08 + 0.45);
+        });
+      } catch (e) {}
+    }
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      const icon = document.getElementById('sound-icon');
+      const btn = document.getElementById('sound-toggle-btn');
+      if (soundEnabled) {
+        icon.className = 'fa-solid fa-volume-high text-amber-400';
+        btn.querySelector('span').textContent = 'Sound On';
+      } else {
+        icon.className = 'fa-solid fa-volume-xmark text-slate-500';
+        btn.querySelector('span').textContent = 'Sound Off';
+      }
+    }
+
+    /* FULL CLOUD SYNC FOR BOTH PARTICIPANTS & PRIZES */
+    async function fetchAllData() {
+      const syncBtn = document.getElementById('sync-btn');
+      const syncIcon = document.getElementById('sync-icon');
+      const statusBadge = document.getElementById('cloud-sync-status');
+      
+      if (syncIcon) syncIcon.classList.add('fa-spin');
+      if (syncBtn) syncBtn.disabled = true;
+
+      try {
+        // 1. Fetch Participants from Sheets
+        const resLeads = await fetch(WEB_APP_URL);
+        const leadsData = await resLeads.json();
+        
+        if (Array.isArray(leadsData) && leadsData.length > 0) {
+          const seen = {};
+          const uniqueNames = [];
+          leadsData.forEach(item => {
+            if (!item) return;
+            const nameStr = item.toString().trim();
+            const key = nameStr.toLowerCase();
+            if (nameStr !== '' && !seen[key]) {
+              seen[key] = true;
+              uniqueNames.push(nameStr);
+            }
+          });
+
+          const existingWinnerNames = new Set(winners.map(w => w.name.trim().toLowerCase()));
+          const unwonLeads = uniqueNames.filter(name => !existingWinnerNames.has(name.trim().toLowerCase()));
+          if (unwonLeads.length > 0) participants = unwonLeads;
+        }
+
+        // 2. Fetch Prizes from Raffle_Config
+        const resConfig = await fetch(`${WEB_APP_URL}?type=raffle_config`);
+        const configData = await resConfig.json();
+        if (configData && configData.prizes && Array.isArray(configData.prizes) && configData.prizes.length > 0) {
+          prizes = configData.prizes;
+        }
+
+        if (statusBadge) statusBadge.innerHTML = `<i class="fa-solid fa-cloud-check text-emerald-400"></i> Cloud Synced`;
+      } catch (err) {
+        console.warn("Cloud sync warning:", err);
+        if (statusBadge) statusBadge.innerHTML = `<i class="fa-solid fa-circle-exclamation text-amber-400"></i> Local Fallback`;
+      } finally {
+        if (syncIcon) syncIcon.classList.remove('fa-spin');
+        if (syncBtn) syncBtn.disabled = false;
+        isSpinning = false;
+        updateDashboardUI();
+        drawWheel();
+      }
+    }
+
+    async function pushConfigToCloud() {
+      try {
+        const payload = {
+          formType: "raffle_config",
+          prizes: prizes
+        };
+        await fetch(WEB_APP_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } catch (err) {
+        console.error("Failed to sync config to cloud:", err);
+      }
+    }
+
+    /* CANVAS WHEEL */
+    const canvas = document.getElementById('wheelCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function drawWheel() {
+      const numParticipants = participants.length;
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      const radius = canvas.width / 2 - 16;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (numParticipants === 0) {
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+        ctx.fillStyle = '#1e293b';
+        ctx.fill();
+        ctx.strokeStyle = '#FFB200';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+
+        ctx.fillStyle = '#F8FAFC';
+        ctx.font = 'bold 18px Plus Jakarta Sans';
+        ctx.textAlign = 'center';
+        ctx.fillText("All Candidates Picked!", centerX, centerY - 12);
+        return;
+      }
+
+      const renderSegments = numParticipants === 1 ? 6 : numParticipants;
+      const sliceAngle = (2 * Math.PI) / renderSegments;
+
+      for (let i = 0; i < renderSegments; i++) {
+        const startAngle = currentAngle + i * sliceAngle;
+        const endAngle = startAngle + sliceAngle;
+        const sliceColor = vibrantColors[i % vibrantColors.length];
+
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+        ctx.closePath();
+        ctx.fillStyle = sliceColor;
+        ctx.fill();
+        ctx.strokeStyle = '#0B192C';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(startAngle + sliceAngle / 2);
+        ctx.textAlign = "right";
+
+        ctx.fillStyle = ['#FFB200', '#FF6500', '#06B6D4'].includes(sliceColor) ? '#0B192C' : '#FFFFFF';
+        ctx.font = `bold ${renderSegments > 15 ? '11px' : '14px'} Plus Jakarta Sans`;
+
+        const participantName = numParticipants === 1 ? participants[0] : participants[i];
+        let nameText = participantName || "";
+        if (nameText.length > 18) nameText = nameText.substring(0, 16) + '...';
+
+        ctx.fillText(nameText, radius - 24, 5);
+        ctx.restore();
+      }
+
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+      ctx.strokeStyle = '#FFB200';
+      ctx.lineWidth = 8;
+      ctx.stroke();
+    }
+
+    let lastTickAngle = 0;
+
+    function spinWheel() {
+      if (isSpinning || participants.length === 0) return;
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+
+      isSpinning = true;
+      document.getElementById('spin-btn').disabled = true;
+      document.getElementById('spin-play-icon').classList.add('hidden');
+      document.getElementById('spin-spinner').classList.remove('hidden');
+      document.getElementById('spin-btn-text').textContent = 'ROULETTE SPINNING...';
+
+      const spinDuration = 5500;
+      const startTime = performance.now();
+      const extraRounds = 8 + Math.random() * 6;
+      const totalRotation = extraRounds * 2 * Math.PI + Math.random() * 2 * Math.PI;
+      const initialAngle = currentAngle;
+
+      function animate(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / spinDuration, 1);
+        const easeOut = 1 - Math.pow(1 - progress, 5);
+        currentAngle = initialAngle + totalRotation * easeOut;
+
+        const renderSegments = participants.length === 1 ? 6 : participants.length;
+        const sliceAngle = (2 * Math.PI) / renderSegments;
+        if (Math.floor(currentAngle / sliceAngle) !== Math.floor(lastTickAngle / sliceAngle)) {
+          playTickSound();
+          lastTickAngle = currentAngle;
+        }
+
+        drawWheel();
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          isSpinning = false;
+          determineWinner();
+        }
+      }
+      requestAnimationFrame(animate);
+    }
+
+    function determineWinner() {
+      const numParticipants = participants.length;
+      if (numParticipants === 0) return;
+
+      const sliceAngle = (2 * Math.PI) / numParticipants;
+      const pointerAngle = (3 * Math.PI) / 2;
+      let normalizedAngle = (pointerAngle - (currentAngle % (2 * Math.PI))) % (2 * Math.PI);
+      if (normalizedAngle < 0) normalizedAngle += 2 * Math.PI;
+
+      const winningIndex = Math.floor(normalizedAngle / sliceAngle) % numParticipants;
+      const winnerName = participants[winningIndex];
+
+      const activePrizeId = parseInt(document.getElementById('active-prize-select').value);
+      const selectedPrize = prizes.find(p => p.id === activePrizeId) || prizes[0];
+
+      currentPendingWinner = {
+        name: winnerName,
+        prizeTitle: selectedPrize ? selectedPrize.title : "Raffle Winner",
+        prizeImage: selectedPrize ? selectedPrize.image : null,
+        rank: selectedPrize ? selectedPrize.rank : 1,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+
+      showWinnerModal(currentPendingWinner);
+    }
+
+    function showWinnerModal(winnerObj) {
+      document.getElementById('winner-modal-name').textContent = winnerObj.name;
+      document.getElementById('winner-prize-text').textContent = winnerObj.prizeTitle;
+      
+      const imgContainer = document.getElementById('winner-modal-image-container');
+      const imgEl = document.getElementById('winner-modal-image');
+      
+      if (winnerObj.prizeImage && winnerObj.prizeImage.trim() !== '') {
+        imgEl.src = winnerObj.prizeImage.trim();
+        imgContainer.classList.remove('hidden');
+      } else {
+        imgEl.src = '';
+        imgContainer.classList.add('hidden');
+      }
+
+      const modal = document.getElementById('winner-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+
+      playVictoryFanfare();
+      confetti({ particleCount: 130, spread: 90, origin: { y: 0.6 } });
+    }
+
+    function confirmAndStoreWinner() {
+      if (currentPendingWinner) {
+        winners.unshift(currentPendingWinner);
+        if (autoRemoveWinner) {
+          participants = participants.filter(n => n.trim().toLowerCase() !== currentPendingWinner.name.trim().toLowerCase());
+        }
+        currentPendingWinner = null;
+      }
+
+      const modal = document.getElementById('winner-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+
+      isSpinning = false;
+      document.getElementById('spin-play-icon').classList.remove('hidden');
+      document.getElementById('spin-spinner').classList.add('hidden');
+      document.getElementById('spin-btn-text').textContent = 'SPIN ROULETTE';
+      
+      updateDashboardUI();
+      drawWheel();
+    }
+
+    function restoreDefaultRoster() {
+      participants = [...defaultSampleRoster];
+      isSpinning = false;
+      updateDashboardUI();
+      drawWheel();
+    }
+
+    function updateDashboardUI() {
+      document.getElementById('participant-count-badge').innerHTML = `<i class="fa-solid fa-users text-amber-400"></i> Participants: ${participants.length}`;
+      document.getElementById('spin-btn').disabled = participants.length === 0 || isSpinning;
+
+      const emptyNotice = document.getElementById('empty-roster-notice');
+      const spinBtnText = document.getElementById('spin-btn-text');
+
+      if (participants.length === 0) {
+        spinBtnText.textContent = 'ALL CANDIDATES PICKED';
+        emptyNotice.classList.remove('hidden');
+      } else {
+        if (!isSpinning) spinBtnText.textContent = 'SPIN ROULETTE';
+        emptyNotice.classList.add('hidden');
+      }
+
+      document.getElementById('prize-count-badge').textContent = `${prizes.length} Items`;
+      document.getElementById('winner-count-badge').textContent = `${winners.length} Winners`;
+
+      const prizeSelect = document.getElementById('active-prize-select');
+      const currentSelectedVal = prizeSelect.value;
+      prizeSelect.innerHTML = prizes.map(p => `
+        <option value="${p.id}" ${p.id == currentSelectedVal ? 'selected' : ''}>${p.title}</option>
+      `).join('');
+
+      const prizeContainer = document.getElementById('prize-list-container');
+      prizeContainer.innerHTML = prizes.map(p => `
+        <div class="bg-slate-950/80 border border-slate-800 p-3 rounded-xl flex items-center gap-3">
+          <div class="w-12 h-12 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-400 flex items-center justify-center font-bold text-base shrink-0 overflow-hidden relative">
+            ${p.image ? `<img src="${p.image}" class="w-full h-full object-cover rounded-xl" onerror="this.remove()">` : `<i class="fa-solid ${p.icon || 'fa-gift'}"></i>`}
+          </div>
+          <div class="flex-1 min-w-0">
+            <h4 class="text-xs font-extrabold text-white truncate">${p.title}</h4>
+            <p class="text-[11px] text-slate-400 truncate">${p.desc || 'VectorEd Prize'}</p>
+          </div>
+        </div>
+      `).join('');
+
+      const winnersContainer = document.getElementById('winners-log-container');
+      if (winners.length === 0) {
+        winnersContainer.innerHTML = `<div class="text-center text-slate-500 py-12 text-xs"><i class="fa-solid fa-award text-3xl mb-2 block text-slate-600"></i>No winners declared yet.</div>`;
+      } else {
+        winnersContainer.innerHTML = winners.map((w, idx) => `
+          <div class="bg-gradient-to-r from-slate-950 to-slate-900 border border-amber-500/30 p-3 rounded-xl flex items-center justify-between gap-2 shadow-sm">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 font-extrabold text-xs flex items-center justify-center border border-amber-500/30 shrink-0">#${winners.length - idx}</span>
+              <div class="min-w-0">
+                <h4 class="text-xs font-bold text-amber-300 truncate">${w.name}</h4>
+                <p class="text-[10px] text-slate-400 truncate">${w.prizeTitle}</p>
+              </div>
+            </div>
+            <span class="text-[10px] font-semibold text-slate-500 shrink-0">${w.timestamp}</span>
+          </div>
+        `).join('');
+      }
+
+      if (isAdminAuthenticated) renderAdminLists();
+    }
+
+    function openLightboxImage(src) {
+      if (!src || !src.trim()) return;
+      document.getElementById('lightbox-image').src = src;
+      document.getElementById('lightbox-modal').classList.remove('hidden');
+      document.getElementById('lightbox-modal').classList.add('flex');
+    }
+
+    function closeLightboxImage() {
+      document.getElementById('lightbox-modal').classList.add('hidden');
+      document.getElementById('lightbox-modal').classList.remove('flex');
+    }
+
+    function openAdminModal() {
+      document.getElementById('admin-modal').classList.remove('hidden');
+      document.getElementById('admin-modal').classList.add('flex');
+    }
+
+    function closeAdminModal() {
+      document.getElementById('admin-modal').classList.add('hidden');
+      document.getElementById('admin-modal').classList.remove('flex');
+    }
+
+    function authenticateAdmin() {
+      if (document.getElementById('admin-password-input').value === adminPassword) {
+        isAdminAuthenticated = true;
+        document.getElementById('admin-login-section').classList.add('hidden');
+        document.getElementById('admin-panel-section').classList.remove('hidden');
+        renderAdminLists();
+      } else {
+        alert("Incorrect password. Default is '123456'.");
+      }
+    }
+
+    function logoutAdmin() {
+      isAdminAuthenticated = false;
+      document.getElementById('admin-login-section').classList.remove('hidden');
+      document.getElementById('admin-panel-section').classList.add('hidden');
+      document.getElementById('admin-password-input').value = '';
+    }
+
+    function verifySecurityAnswer() {
+      const answer = document.getElementById('sec-question-answer').value.trim().toLowerCase();
+      if (["jan 01, 2024", "january 01, 2024", "01/01/2024"].includes(answer)) {
+        isSecurityQuestionPassed = true;
+        document.getElementById('password-change-box').classList.remove('opacity-50', 'pointer-events-none');
+        alert("Verified! You can now update your password.");
+      } else {
+        alert("Incorrect verification answer.");
+      }
+    }
+
+    function saveNewAdminPassword() {
+      const newPass = document.getElementById('new-password-input').value.trim();
+      if (newPass.length < 4) return alert("Password must be at least 4 characters.");
+      adminPassword = newPass;
+      localStorage.setItem('ve_admin_password', newPass);
+      alert("Password updated!");
+    }
+
+    function switchAdminTab(tabName) {
+      ['prizes', 'winners', 'roster', 'security'].forEach(t => {
+        document.getElementById(`admin-tab-${t}`).classList.add('hidden');
+        const btn = document.getElementById(`tab-btn-${t}`);
+        if (btn) btn.className = "px-4 py-2 text-xs font-bold border-b-2 border-transparent text-slate-400 whitespace-nowrap";
+      });
+      document.getElementById(`admin-tab-${tabName}`).classList.remove('hidden');
+      document.getElementById(`tab-btn-${tabName}`).className = "px-4 py-2 text-xs font-bold border-b-2 border-amber-500 text-amber-400 whitespace-nowrap";
+    }
+
+    function toggleAutoRemoveWinner(enabled) { autoRemoveWinner = enabled; }
+
+    function openPrizeFormModal(editId = null) {
+      const modal = document.getElementById('prize-form-modal');
+      const titleEl = document.getElementById('prize-modal-title');
+      const nameInput = document.getElementById('prize-name-input');
+      const imageInput = document.getElementById('prize-image-input');
+      const hiddenId = document.getElementById('editing-prize-id');
+
+      if (editId) {
+        const prize = prizes.find(p => p.id == editId);
+        if (!prize) return;
+        titleEl.innerHTML = `<i class="fa-solid fa-pen-to-square text-amber-400"></i> Edit Prize`;
+        hiddenId.value = prize.id;
+        nameInput.value = prize.title || '';
+        imageInput.value = prize.image || '';
+        previewPrizeImage(prize.image);
+      } else {
+        if (prizes.length >= 5) return alert("Maximum limit of 5 prizes reached.");
+        titleEl.innerHTML = `<i class="fa-solid fa-plus text-amber-400"></i> Add New Prize`;
+        hiddenId.value = '';
+        nameInput.value = '';
+        imageInput.value = '';
+        document.getElementById('prize-image-preview-container').classList.add('hidden');
+      }
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closePrizeFormModal() {
+      document.getElementById('prize-form-modal').classList.add('hidden');
+      document.getElementById('prize-form-modal').classList.remove('flex');
+    }
+
+    function previewPrizeImage(url) {
+      const previewContainer = document.getElementById('prize-image-preview-container');
+      const previewImg = document.getElementById('prize-image-preview');
+      if (url && url.trim()) {
+        previewImg.src = url.trim();
+        previewContainer.classList.remove('hidden');
+      } else {
+        previewContainer.classList.add('hidden');
+      }
+    }
+
+    function savePrizeFromModal() {
+      const idVal = document.getElementById('editing-prize-id').value;
+      const nameVal = document.getElementById('prize-name-input').value.trim();
+      const imageVal = document.getElementById('prize-image-input').value.trim();
+
+      if (!nameVal) return alert("Please enter a Prize Name.");
+
+      if (idVal) {
+        const idx = prizes.findIndex(p => p.id == idVal);
+        if (idx !== -1) {
+          prizes[idx].title = nameVal;
+          prizes[idx].image = imageVal;
+        }
+      } else {
+        prizes.push({ id: Date.now(), rank: prizes.length + 1, title: nameVal, icon: "fa-gift", image: imageVal, desc: "VectorEd Raffle Prize" });
+      }
+
+      pushConfigToCloud();
+      closePrizeFormModal();
+      updateDashboardUI();
+    }
+
+    function removePrize(id) {
+      prizes = prizes.filter(p => p.id != id);
+      pushConfigToCloud();
+      updateDashboardUI();
+    }
+
+    function removeWinner(idx) { winners.splice(idx, 1); updateDashboardUI(); }
+    function clearAllWinners() { if (confirm("Clear winners log?")) { winners = []; updateDashboardUI(); } }
+
+    function renderAdminLists() {
+      document.getElementById('admin-prizes-list').innerHTML = prizes.map(p => `
+        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between gap-3">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-10 h-10 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-400 flex items-center justify-center shrink-0 overflow-hidden relative">
+              ${p.image ? `<img src="${p.image}" class="w-full h-full object-cover rounded-lg" onerror="this.remove()">` : `<i class="fa-solid ${p.icon || 'fa-gift'}"></i>`}
+            </div>
+            <div class="min-w-0"><h5 class="text-xs font-bold text-white truncate">${p.title}</h5></div>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <button onclick="openPrizeFormModal('${p.id}')" class="text-amber-400 text-xs px-2.5 py-1.5 bg-amber-500/10 rounded-lg border border-amber-500/20"><i class="fa-solid fa-pen-to-square"></i></button>
+            <button onclick="removePrize('${p.id}')" class="text-rose-400 text-xs px-2.5 py-1.5 bg-rose-500/10 rounded-lg border border-rose-500/20"><i class="fa-solid fa-trash"></i></button>
+          </div>
+        </div>
+      `).join('');
+
+      document.getElementById('admin-winners-list').innerHTML = winners.length === 0 ? `<div class="text-center text-slate-500 py-6 text-xs">No winners recorded.</div>` : winners.map((w, idx) => `
+        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between gap-3">
+          <div class="min-w-0"><h5 class="text-xs font-bold text-amber-300 truncate">${w.name}</h5><p class="text-[10px] text-slate-400 truncate">${w.prizeTitle}</p></div>
+          <button onclick="removeWinner(${idx})" class="text-rose-400 text-xs px-2.5 py-1.5 bg-rose-500/10 rounded-lg border border-rose-500/20"><i class="fa-solid fa-trash"></i></button>
+        </div>
+      `).join('');
+
+      document.getElementById('admin-roster-list').innerHTML = participants.map((p, idx) => `
+        <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between gap-2">
+          <span class="text-xs text-slate-200 truncate font-medium">${idx + 1}. ${p}</span>
+          <button onclick="participants.splice(${idx},1);updateDashboardUI();drawWheel();" class="text-rose-400 text-xs px-2 py-1 bg-rose-500/10 rounded-lg border border-rose-500/20"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      `).join('');
+    }
+
+    function addManualParticipantPrompt() {
+      const name = prompt("Enter Participant Full Name:");
+      if (name && name.trim()) { participants.push(name.trim()); updateDashboardUI(); drawWheel(); }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      fetchAllData();
+    });
+  </script>
+</body>
+</html>
